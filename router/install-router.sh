@@ -26,6 +26,7 @@ sudo cp 50-dhcp-hook.sh /etc/networkd-dispatcher/routable.d/50-mptcp
 sudo chmod +x /etc/networkd-dispatcher/routable.d/50-mptcp
 
 echo ">> [5/8] copiar scripts para /opt/mptcp/router (usados pelo systemd)"
+sudo rm -rf /opt/mptcp/router          # limpa cópia antiga (evita aninhamento/arquivos velhos)
 sudo mkdir -p /opt/mptcp
 sudo cp -r . /opt/mptcp/router
 
@@ -47,4 +48,8 @@ sudo systemctl enable --now glorytun-watchdog.timer
 echo
 echo "== Router pronto. Verificações rápidas: =="
 echo "paths glorytun (deve listar as 3 Starlink):"; glorytun path || true
-echo -n "IP público visto pela internet (deve ser o da VPS): "; curl -s ifconfig.me || true; echo
+echo "CIFRA desta ponta (tem que ser IGUAL à da VPS — senão conecta mas não passa dados):"
+glorytun show 2>/dev/null | grep -i cipher || true
+echo -n "IP público visto pela internet (deve ser o da VPS): "; curl -s --max-time 8 ifconfig.me || true; echo
+echo
+echo "DICA: rode 'sudo bash /opt/mptcp/router/test-resilience.sh' pra provar que o túnel volta sozinho."

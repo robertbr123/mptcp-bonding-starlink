@@ -128,13 +128,17 @@ Três camadas garantem que o túnel volta sozinho se cair:
 throughput ↓/↑ por antena, o agregado no `tun0`, e avisa se alguma antena não está ativa.
 Use pra flagrar rápido uma Starlink rendendo menos ou caída.
 
-Testar a resiliência:
+Testar a resiliência (script pronto):
 ```bash
-sudo systemctl kill glorytun-client     # mata o processo
-sleep 5
-systemctl status glorytun-client        # deve estar 'active (running)' de novo
-journalctl -u glorytun-watchdog -n 5     # ver o watchdog agindo, se preciso
+sudo bash /opt/mptcp/router/test-resilience.sh   # mata o glorytun e cronometra a volta automática
 ```
+
+> **⚠️ LIÇÃO DE CAMPO (importante):** em produção **NUNCA** rode o glorytun na mão (`glorytun bind ... &`).
+> Rodado manual, ele **não se recupera** — se a Starlink trocar de IP (CGNAT) ou a sessão esfriar
+> ficando ociosa, o túnel morre e fica morto (foi o que vimos no teste). **Sempre via systemd**
+> (`install-router.sh`), que traz Restart=always + StartLimitIntervalSec=0 + watchdog. Aí ele volta
+> sozinho em ≤15s. Em produção o túnel também quase nunca fica ocioso (70 clientes = tráfego constante),
+> o que já reduz muito esse tipo de queda.
 
 ## Comandos do dia a dia
 
