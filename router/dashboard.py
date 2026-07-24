@@ -2,13 +2,14 @@
 # router/dashboard.py — painel web simples de status do bonding (LAN).
 # Acesse em http://192.168.100.1  (rede da CCR). Sem dependências: só Python3 stdlib.
 # TROCAR os nomes das interfaces em IFACES (ver 00-discover.sh).
-import subprocess, time, html
+import subprocess, time, html, os
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-LAN_IP = "192.168.100.1"     # IP de LAN do router (onde a CCR aponta)
-PORT   = 80
-IFACES = ["enp1s0", "enp2s0", "enp3s0"]   # <-- Starlink 1/2/3 (nomes reais)
-PEER   = "10.255.255.1"       # outra ponta do túnel (VPS)
+# Configurável por env (útil pra teste). Padrões = produção (i5).
+LAN_IP = os.environ.get("GLORY_LAN_IP", "192.168.100.1")   # IP de LAN do router (0.0.0.0 = todos)
+PORT   = int(os.environ.get("GLORY_PORT", "80"))
+IFACES = os.environ.get("GLORY_IFACES", "enp1s0,enp2s0,enp3s0").split(",")  # Starlink 1/2/3
+PEER   = os.environ.get("GLORY_PEER", "10.255.255.1")      # outra ponta do túnel (VPS)
 
 def sh(cmd):
     try:
@@ -125,10 +126,12 @@ class H(BaseHTTPRequestHandler):
     def log_message(self, *a): pass   # silencioso
 
 def main():
-    # espera o IP de LAN subir antes de fazer o bind
-    for _ in range(30):
-        if ok(f"ip -4 addr show | grep -q {LAN_IP}"): break
-        time.sleep(2)
+    # espera o IP de LAN subir antes de fazer o bind (pula se for 0.0.0.0)
+    if LAN_IP != "0.0.0.0":
+        for _ in range(30):
+            if ok(f"ip -4 addr show | grep -q {LAN_IP}"): break
+            time.sleep(2)
+    print(f"painel em http://{LAN_IP}:{PORT}  (interfaces: {IFACES})")
     HTTPServer((LAN_IP, PORT), H).serve_forever()
 
 if __name__ == "__main__":
