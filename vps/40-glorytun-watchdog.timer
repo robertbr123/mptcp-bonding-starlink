@@ -1,0 +1,12 @@
+# vps/40-glorytun-watchdog.timer -> /etc/systemd/system/glorytun-watchdog.timer
+# Roda o watchdog do servidor a cada 30s (o do router, a 15s, é o primário).
+[Unit]
+Description=verifica o tunel glorytun (server) a cada 30s
+
+[Timer]
+OnBootSec=45
+OnUnitActiveSec=30
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target

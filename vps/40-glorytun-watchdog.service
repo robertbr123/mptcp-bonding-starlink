@@ -1,0 +1,9 @@
+# vps/40-glorytun-watchdog.service -> /etc/systemd/system/glorytun-watchdog.service
+# Disparado pelo timer; reinicia o glorytun-server se o túnel estiver travado.
+[Unit]
+Description=glorytun watchdog server (reinicia se o tunel travar)
+After=glorytun-server.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/mptcp/vps/40-glorytun-watchdog.sh

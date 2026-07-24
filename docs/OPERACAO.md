@@ -117,6 +117,10 @@ bufferbloat **leve-moderado**, ok pra streaming. Dois controles aplicados/recome
 
 Três camadas garantem que o túnel volta sozinho se cair:
 
+**Vale para as DUAS pontas** (router E VPS) — a VPS também roda como serviço systemd com watchdog
+próprio (`vps/40-glorytun-watchdog.*`, a cada 30s, pinga o router `10.255.255.2`). O servidor
+morreu no teste só porque estava manual; via `install-vps.sh` ele é systemd e não cai assim.
+
 1. **`Restart=always` + `RestartSec=3`** nos serviços — se o processo glorytun morrer, o systemd sobe de novo em 3s.
 2. **`StartLimitIntervalSec=0`** — o systemd **nunca desiste** de reiniciar (sem o limite padrão de 5 tentativas).
 3. **Watchdog em 2 níveis (`glorytun-watchdog.timer`, a cada 30s):**
