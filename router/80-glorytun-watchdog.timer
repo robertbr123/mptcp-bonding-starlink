@@ -1,0 +1,12 @@
+# router/80-glorytun-watchdog.timer -> /etc/systemd/system/glorytun-watchdog.timer
+# Roda o watchdog a cada 30s (e 60s após o boot).
+[Unit]
+Description=verifica o tunel glorytun a cada 30s
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=30
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target

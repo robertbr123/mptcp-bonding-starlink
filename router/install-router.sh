@@ -17,26 +17,32 @@ echo ">> [2/8] sysctl (MPTCP + multi-NIC)"
 sudo cp 20-sysctl-mptcp.conf /etc/sysctl.d/90-mptcp.conf
 sudo sysctl --system >/dev/null
 
-echo ">> [3/7] roteamento por interface"
+echo ">> [3/8] roteamento por interface"
 sudo bash 30-routing.sh
 
-echo ">> [4/7] hook de auto-conserto (networkd-dispatcher)"
+echo ">> [4/8] hook de auto-conserto (networkd-dispatcher)"
 sudo apt install -y networkd-dispatcher
 sudo cp 50-dhcp-hook.sh /etc/networkd-dispatcher/routable.d/50-mptcp
 sudo chmod +x /etc/networkd-dispatcher/routable.d/50-mptcp
 
-echo ">> [5/7] copiar scripts para /opt/mptcp/router (usados pelo systemd)"
+echo ">> [5/8] copiar scripts para /opt/mptcp/router (usados pelo systemd)"
 sudo mkdir -p /opt/mptcp
 sudo cp -r . /opt/mptcp/router
 
-echo ">> [6/7] serviço glorytun client (bind + paths por Starlink)"
+echo ">> [6/8] serviço glorytun client (bind + paths por Starlink)"
 sudo cp 60-glorytun-client.service /etc/systemd/system/glorytun-client.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now glorytun-client
 sleep 5
 
-echo ">> [7/7] roteamento do tráfego (default via tun + furo pro VPS)"
+echo ">> [7/8] roteamento do tráfego (default via tun + furo pro VPS)"
 sudo bash 70-tunnel-routing.sh
+
+echo ">> [8/8] watchdog (reinicia o túnel sozinho se cair)"
+sudo cp 80-glorytun-watchdog.service /etc/systemd/system/glorytun-watchdog.service
+sudo cp 80-glorytun-watchdog.timer /etc/systemd/system/glorytun-watchdog.timer
+sudo systemctl daemon-reload
+sudo systemctl enable --now glorytun-watchdog.timer
 
 echo
 echo "== Router pronto. Verificações rápidas: =="

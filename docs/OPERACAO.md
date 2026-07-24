@@ -101,6 +101,22 @@ iperf3 -c 10.255.255.1 -t 20 -P 4     # throughput deve superar 1 antena sozinha
 | Starlink trocou IP e caiu subflow | hook não rodou | `journalctl -t mptcp-hook`; conferir `/etc/networkd-dispatcher/routable.d/50-mptcp` executável |
 | Clientes sem internet | rota da CCR / NAT | CCR apontando gateway `192.168.100.1`; NAT da CCR ativo; `net.ipv4.ip_forward=1` nas duas pontas |
 
+## Resiliência (auto-recuperação)
+
+Três camadas garantem que o túnel volta sozinho se cair:
+
+1. **`Restart=always` + `RestartSec=3`** nos serviços — se o processo glorytun morrer, o systemd sobe de novo em 3s.
+2. **`StartLimitIntervalSec=0`** — o systemd **nunca desiste** de reiniciar (sem o limite padrão de 5 tentativas).
+3. **Watchdog (`glorytun-watchdog.timer`)** — a cada 30s pinga o outro lado do túnel (`10.255.255.1`) pela `tun0`; se não responder, reinicia o `glorytun-client`. Pega o caso do túnel "travar vivo".
+
+Testar a resiliência:
+```bash
+sudo systemctl kill glorytun-client     # mata o processo
+sleep 5
+systemctl status glorytun-client        # deve estar 'active (running)' de novo
+journalctl -u glorytun-watchdog -n 5     # ver o watchdog agindo, se preciso
+```
+
 ## Comandos do dia a dia
 
 ```bash

@@ -5,6 +5,8 @@
 Description=glorytun server (bonding Starlink, multipath UDP)
 After=network-online.target
 Wants=network-online.target
+# nunca desistir de reiniciar (sem limite de tentativas)
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple

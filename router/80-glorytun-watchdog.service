@@ -1,0 +1,9 @@
+# router/80-glorytun-watchdog.service -> /etc/systemd/system/glorytun-watchdog.service
+# Disparado pelo timer a cada 30s; reinicia o glorytun-client se o túnel estiver morto.
+[Unit]
+Description=glorytun watchdog (reinicia o cliente se o tunel cair)
+After=glorytun-client.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/mptcp/router/80-glorytun-watchdog.sh
