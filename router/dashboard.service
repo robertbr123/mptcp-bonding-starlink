@@ -2,12 +2,17 @@
 # Painel web de status em http://192.168.100.1 (LAN da CCR). Só Python3 stdlib.
 [Unit]
 Description=Painel web de status do bonding Starlink
-After=network-online.target
+After=network-online.target glorytun-client.service
 Wants=network-online.target
 StartLimitIntervalSec=0
 
 [Service]
 Type=simple
+# EDITAR: nomes reais das interfaces e o IP público da VPS (p/ latência/perda por antena).
+Environment=GLORY_IFACES=enp1s0,enp2s0,enp3s0
+Environment=GLORY_VPS_IP=<IP_PUBLICO_VPS>
+# OPCIONAL (obstrução do prato): precisa de grpcurl e resolver o conflito de IP — ver OPERACAO.md
+# Environment=GLORY_DISHES=192.168.100.1
 ExecStart=/usr/bin/python3 /opt/mptcp/router/dashboard.py
 Restart=always
 RestartSec=3

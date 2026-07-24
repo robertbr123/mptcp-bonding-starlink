@@ -128,10 +128,21 @@ morreu no teste só porque estava manual; via `install-vps.sh` ele é systemd e 
    - **Nível 2 — por antena:** se o path de UMA Starlink caiu/sumiu (mas o túnel está vivo pelas outras), reabilita só aquele path — o bonding volta pra 3/3 sozinho.
 
 ### Painel web (navegador)
-Acesse **http://192.168.100.1** pela rede da CCR — painel de status que atualiza a cada 5s:
-túnel online/offline, serviço glorytun, watchdog, antenas ativas (X/3), **quantas vezes caiu**
-(NRestarts do systemd), banda agregada e banda por antena. É `router/dashboard.py` (Python puro,
-sem dependências), rodando como serviço `dashboard.service`. Instalado pelo `install-router.sh` (passo 9).
+Acesse **http://192.168.100.1** pela rede da CCR — painel que atualiza a cada 5s. Mostra:
+- túnel online/offline, serviço glorytun, watchdog, antenas ativas (X/3), **uptime do túnel**, **quantas vezes caiu** (NRestarts);
+- **gráfico de banda agregada** (últimos ~6 min — pra ver pico/saturação);
+- por antena: status, banda ↓/↑, **latência (ms) e perda (%)** com ⚠️ quando degrada (perda ≥5% ou ping ≥150ms);
+- **últimas quedas** (24h, com horário).
+
+É `router/dashboard.py` (Python puro, sem deps) + `dashboard.service`. Configure no service:
+`GLORY_IFACES` (nomes das Starlink) e `GLORY_VPS_IP` (IP público da VPS, pra medir latência/perda por antena).
+
+**Obstrução do prato (opcional, avançado):** setar `GLORY_DISHES` no service. Requer:
+1. o binário **`grpcurl`** instalado;
+2. resolver o **conflito de IP**: o prato Starlink usa `192.168.100.1` de gerência — o MESMO IP da nossa
+   LAN. Pra consultar os pratos, use uma LAN em outra faixa (ex: `192.168.50.0/24`) e roteie
+   `192.168.100.1` por cada dish (source routing). Sem isso, mostra `N/A` (não afeta o resto).
+   → Validar no i5 com os pratos reais; não é necessário pro bonding funcionar.
 
 ### Monitor por antena (terminal)
 `bash router/monitor-antenas.sh` mostra, a cada 1s: status do path de cada Starlink (✅/❌),
