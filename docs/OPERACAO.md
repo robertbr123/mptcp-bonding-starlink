@@ -101,6 +101,18 @@ iperf3 -c 10.255.255.1 -t 20 -P 4     # throughput deve superar 1 antena sozinha
 | Starlink trocou IP e caiu subflow | hook não rodou | `journalctl -t mptcp-hook`; conferir `/etc/networkd-dispatcher/routable.d/50-mptcp` executável |
 | Clientes sem internet | rota da CCR / NAT | CCR apontando gateway `192.168.100.1`; NAT da CCR ativo; `net.ipv4.ip_forward=1` nas duas pontas |
 
+## Bufferbloat (latência sob carga)
+
+Em teste (1 Starlink), ping ocioso ~53ms subiu a ~82ms (máx 110ms) sob download saturado —
+bufferbloat **leve-moderado**, ok pra streaming. Dois controles aplicados/recomendados:
+
+1. **`fq_codel`** (fila inteligente) — ligado por padrão via `net.core.default_qdisc=fq_codel` e
+   explicitamente na `tun0` (nos `.service`). Segura a latência sob carga.
+2. **Rate abaixo da capacidade (alavanca principal):** setar o `rate rx` de cada path um pouco
+   ABAIXO da banda real da antena (ex: antena de 150 → `rx 130mbit`) impede a fila da Starlink de
+   encher → latência baixa sob carga. **Calibrar no i5** medindo cada Starlink. Ajustar em
+   `45-glorytun-paths.sh` (RATE_TX/RATE_RX).
+
 ## Resiliência (auto-recuperação)
 
 Três camadas garantem que o túnel volta sozinho se cair:

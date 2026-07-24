@@ -11,7 +11,7 @@ StartLimitIntervalSec=0
 [Service]
 Type=simple
 ExecStart=/usr/local/bin/glorytun bind dev tun0 keyfile /etc/glorytun/tunnel.key from addr 0.0.0.0 port 65001 persist
-ExecStartPost=/bin/sh -c 'for i in $(seq 1 10); do ip link show tun0 >/dev/null 2>&1 && break; sleep 1; done; ip addr add 10.255.255.1 peer 10.255.255.2 dev tun0 2>/dev/null || true; ip link set tun0 up mtu 1300'
+ExecStartPost=/bin/sh -c 'for i in $(seq 1 10); do ip link show tun0 >/dev/null 2>&1 && break; sleep 1; done; ip addr add 10.255.255.1 peer 10.255.255.2 dev tun0 2>/dev/null || true; ip link set tun0 up mtu 1300; tc qdisc replace dev tun0 root fq_codel 2>/dev/null || true'
 Restart=always
 RestartSec=3
 
