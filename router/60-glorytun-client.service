@@ -1,0 +1,21 @@
+# router/60-glorytun-client.service -> /etc/systemd/system/glorytun-client.service
+# TROCAR <IP_PUBLICO_VPS>. Reconecta sozinho e sobe no boot.
+# ExecStartPre garante que rota+endpoints das Starlink estão prontos antes do túnel.
+[Unit]
+Description=glorytun MPTCP client (bonding Starlink)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStartPre=/bin/sh -c 'bash /opt/mptcp/router/30-routing.sh; bash /opt/mptcp/router/40-mptcp-endpoints.sh'
+ExecStart=/usr/local/bin/glorytun-tcp client \
+  keyfile /etc/glorytun/tunnel.key \
+  host <IP_PUBLICO_VPS> port 65001 \
+  mptcp
+ExecStartPost=/bin/sh -c 'sleep 2; ip addr add 10.255.255.2/30 dev tun0 2>/dev/null; ip link set tun0 up; ip link set tun0 mtu 1400'
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

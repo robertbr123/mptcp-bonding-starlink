@@ -1,0 +1,26 @@
+# router/10-netplan.yaml -> copiar para /etc/netplan/10-mptcp.yaml
+# IMPORTANTE: trocar enp1s0/enp2s0/enp3s0/enp4s0 pelos nomes reais (ver 00-discover.sh).
+# use-routes:false impede que as 3 Starlink briguem pela rota default global —
+# a rota de cada uma vai só na sua tabela (ver 30-routing.sh).
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp1s0:            # Starlink 1
+      dhcp4: true
+      dhcp4-overrides:
+        use-routes: false
+        use-dns: false
+    enp2s0:            # Starlink 2
+      dhcp4: true
+      dhcp4-overrides:
+        use-routes: false
+        use-dns: false
+    enp3s0:            # Starlink 3
+      dhcp4: true
+      dhcp4-overrides:
+        use-routes: false
+        use-dns: false
+    enp4s0:            # LAN para a CCR MikroTik
+      dhcp4: false
+      addresses: [192.168.100.1/24]

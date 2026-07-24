@@ -1,0 +1,19 @@
+# vps/20-glorytun-server.service -> /etc/systemd/system/glorytun-server.service
+# Termina o túnel MPTCP. Sobe no boot e reconecta sozinho.
+[Unit]
+Description=glorytun MPTCP server (bonding Starlink)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/glorytun-tcp server \
+  keyfile /etc/glorytun/tunnel.key \
+  listen 0.0.0.0:65001 \
+  mptcp
+ExecStartPost=/bin/sh -c 'sleep 2; ip addr add 10.255.255.1/30 dev tun0 2>/dev/null; ip link set tun0 up; ip link set tun0 mtu 1400'
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
