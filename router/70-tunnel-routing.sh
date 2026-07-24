@@ -29,3 +29,9 @@ fi
 # default do tráfego dos clientes vai pro túnel
 ip route replace default via "$PEER" dev tun0
 echo "default via tun0 OK"
+
+# NAT: mascara o tráfego dos clientes pro túnel. ESSENCIAL — sem isso a VPS não sabe
+# devolver a resposta pro IP do cliente (só conhece 10.255.255.2). Idempotente.
+iptables -t nat -C POSTROUTING -o tun0 -j MASQUERADE 2>/dev/null || \
+  iptables -t nat -A POSTROUTING -o tun0 -j MASQUERADE
+echo "NAT (masquerade) para tun0 OK"
