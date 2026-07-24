@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # router/50-dhcp-hook.sh -> /etc/networkd-dispatcher/routable.d/50-mptcp
 # networkd-dispatcher chama este hook quando uma interface fica "routable".
-# Ele refaz rota + regra + endpoint MPTCP da interface que mudou de IP.
+# Refaz rota + regra da interface que mudou de IP e reabilita o path do glorytun.
 # É o auto-conserto: se uma Starlink cai e volta com IP novo, o bonding se refaz sozinho.
 set -euo pipefail
 
@@ -26,10 +26,7 @@ ip route add default via "$GW" dev "$IFACE" table "$tbl"
 ip rule add from "$ip4" table "$tbl" priority "$tbl"
 ip rule flush cache 2>/dev/null || true
 
-# refaz o endpoint MPTCP dessa interface: remove os que apontam pra ela e adiciona o atual
-while read -r eid; do
-  [ -n "$eid" ] && ip mptcp endpoint delete id "$eid" 2>/dev/null || true
-done < <(ip mptcp endpoint show | awk -v d="$IFACE" '$0 ~ ("dev "d) {for(i=1;i<=NF;i++) if($i=="id"){print $(i+1)}}')
-ip mptcp endpoint add "$ip4" dev "$IFACE" subflow fullmesh 2>/dev/null || true
+# reabilita o path do glorytun para o novo IP dessa Starlink (bonding)
+glorytun path up "$ip4" rate tx 20mbit rx 150mbit 2>/dev/null || true
 
-logger -t mptcp-hook "reconfig $IFACE ip=$ip4 tabela=$tbl"
+logger -t mptcp-hook "reconfig $IFACE ip=$ip4 tabela=$tbl (path glorytun reabilitado)"

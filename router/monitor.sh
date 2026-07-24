@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# router/monitor.sh — status enxuto do bonding (Ctrl-C pra sair).
+# router/monitor.sh — status enxuto do bonding glorytun (Ctrl-C pra sair).
 # TROCAR os nomes das interfaces se necessário (ver 00-discover.sh).
 set -euo pipefail
 
 watch -n2 '
-echo "== Subflows MPTCP (endpoints) =="; ip mptcp endpoint show
+echo "== Túnel glorytun =="; glorytun show 2>/dev/null || echo "  (sem túnel ativo)"
 echo
-echo "== Conexão MPTCP (ss -M) =="; ss -M 2>/dev/null | head -20
+echo "== Paths (bonding das Starlink) =="; glorytun path 2>/dev/null || echo "  (nenhum path)"
 echo
 echo "== Banda acumulada por interface =="
 for i in enp1s0 enp2s0 enp3s0 tun0; do

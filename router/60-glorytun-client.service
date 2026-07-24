@@ -1,19 +1,17 @@
 # router/60-glorytun-client.service -> /etc/systemd/system/glorytun-client.service
-# TROCAR <IP_PUBLICO_VPS>. Reconecta sozinho e sobe no boot.
-# ExecStartPre garante que rota+endpoints das Starlink estão prontos antes do túnel.
+# TROCAR <IP_PUBLICO_VPS>. glorytun moderno: multipath UDP nativo.
+# ExecStartPre garante o policy routing das Starlink antes do túnel.
+# ExecStartPost sobe o IP do tun0 e adiciona 1 path por Starlink (o bonding).
 [Unit]
-Description=glorytun MPTCP client (bonding Starlink)
+Description=glorytun client (bonding Starlink, multipath UDP)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStartPre=/bin/sh -c 'bash /opt/mptcp/router/30-routing.sh; bash /opt/mptcp/router/40-mptcp-endpoints.sh'
-ExecStart=/usr/local/bin/glorytun-tcp client \
-  keyfile /etc/glorytun/tunnel.key \
-  host <IP_PUBLICO_VPS> port 65001 \
-  mptcp
-ExecStartPost=/bin/sh -c 'sleep 2; ip addr add 10.255.255.2/30 dev tun0 2>/dev/null; ip link set tun0 up; ip link set tun0 mtu 1400'
+ExecStartPre=/bin/sh -c 'bash /opt/mptcp/router/30-routing.sh'
+ExecStart=/usr/local/bin/glorytun bind dev tun0 keyfile /etc/glorytun/tunnel.key to addr <IP_PUBLICO_VPS> port 65001 persist
+ExecStartPost=/bin/sh -c 'for i in $(seq 1 10); do ip link show tun0 >/dev/null 2>&1 && break; sleep 1; done; ip addr add 10.255.255.2 peer 10.255.255.1 dev tun0 2>/dev/null || true; ip link set tun0 up mtu 1400; sleep 1; bash /opt/mptcp/router/45-glorytun-paths.sh || true'
 Restart=always
 RestartSec=3
 

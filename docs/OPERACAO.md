@@ -1,5 +1,18 @@
 # Operação e Runbook
 
+> **ATUALIZAÇÃO IMPORTANTE (arquitetura):** a versão atual do glorytun faz **multipath UDP nativo**
+> (subcomando `path`) — **não usa o MPTCP do kernel**. O bonding das 3 Starlink é feito pelo próprio
+> glorytun. Sintaxe confirmada:
+> - Servidor: `glorytun bind dev tun0 keyfile <chave> from addr 0.0.0.0 port 65001 persist`
+> - Cliente:  `glorytun bind dev tun0 keyfile <chave> to addr <IP_VPS> port 65001 persist`
+> - Path (bonding): `glorytun path up <IP_LOCAL_STARLINK> rate tx <X> rx <Y>` (1 por antena)
+> - O glorytun **não** configura o IP do `tun0` — a gente sobe com `ip addr add ... peer ... dev tun0`.
+>
+> **FIREWALL:** a porta **UDP 65001** precisa estar liberada de entrada na VPS (no firewall do
+> provedor / security group **e** no ufw/iptables local, se houver).
+
+
+
 ## Ordem de instalação (resumo)
 
 ### VPS
