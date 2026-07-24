@@ -16,6 +16,9 @@ tadd mangle FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
 echo "NAT configurado na WAN=$WAN"
 
-# persistir entre reboots
-sudo apt install -y iptables-persistent >/dev/null 2>&1 || true
-sudo netfilter-persistent save
+# persistir entre reboots (só instala o iptables-persistent se ainda não tiver —
+# assim é leve pra rodar no ExecStartPost do glorytun-server a cada start)
+if ! command -v netfilter-persistent >/dev/null 2>&1; then
+  sudo apt install -y iptables-persistent >/dev/null 2>&1 || true
+fi
+command -v netfilter-persistent >/dev/null 2>&1 && sudo netfilter-persistent save || true
