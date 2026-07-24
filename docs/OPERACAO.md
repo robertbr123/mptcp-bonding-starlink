@@ -64,11 +64,11 @@ sudo bash vps/install-vps.sh
 
 A CCR continua fazendo **PPPoE + autenticação + NAT dos clientes** — só muda para onde ela manda o tráfego de saída:
 
-1. Ligar a interface LAN da CCR na `enp4s0` do router Linux (mesma rede `192.168.100.0/24`).
-2. Dar um IP nessa interface da CCR, ex `192.168.100.2`.
-3. Trocar a rota default da CCR para apontar o gateway `192.168.100.1` (o router Linux):
+1. Ligar a interface LAN da CCR na `enp4s0` do router Linux (mesma rede `192.168.50.0/24`).
+2. Dar um IP nessa interface da CCR, ex `192.168.50.2`.
+3. Trocar a rota default da CCR para apontar o gateway `192.168.50.1` (o router Linux):
    ```
-   /ip route add dst-address=0.0.0.0/0 gateway=192.168.100.1
+   /ip route add dst-address=0.0.0.0/0 gateway=192.168.50.1
    ```
    (remover/desativar as rotas default antigas que iam direto pras Starlink)
 4. Garantir que o `masquerade`/NAT dos clientes na CCR continua ativo (não muda).
@@ -99,7 +99,7 @@ iperf3 -c 10.255.255.1 -t 20 -P 4     # throughput deve superar 1 antena sozinha
 | Vídeo/sites grandes travam | MTU/MSS | `ip link show tun0` (mtu 1400); regra `TCPMSS --clamp-mss-to-pmtu` na VPS (`iptables -t mangle -S FORWARD`) |
 | Tudo congela ao subir túnel | falta o "furo" anti-loop | `ip route get <IP_VPS>` deve sair pelas Starlink, NÃO por tun0 (rodar `70-tunnel-routing.sh`) |
 | Starlink trocou IP e caiu subflow | hook não rodou | `journalctl -t mptcp-hook`; conferir `/etc/networkd-dispatcher/routable.d/50-mptcp` executável |
-| Clientes sem internet | rota da CCR / NAT | CCR apontando gateway `192.168.100.1`; NAT da CCR ativo; `net.ipv4.ip_forward=1` nas duas pontas |
+| Clientes sem internet | rota da CCR / NAT | CCR apontando gateway `192.168.50.1`; NAT da CCR ativo; `net.ipv4.ip_forward=1` nas duas pontas |
 
 ## Bufferbloat (latência sob carga)
 
@@ -128,7 +128,7 @@ morreu no teste só porque estava manual; via `install-vps.sh` ele é systemd e 
    - **Nível 2 — por antena:** se o path de UMA Starlink caiu/sumiu (mas o túnel está vivo pelas outras), reabilita só aquele path — o bonding volta pra 3/3 sozinho.
 
 ### Painel web (navegador)
-Acesse **http://192.168.100.1** pela rede da CCR — painel que atualiza a cada 5s. Mostra:
+Acesse **http://192.168.50.1** pela rede da CCR — painel que atualiza a cada 5s. Mostra:
 - túnel online/offline, serviço glorytun, watchdog, antenas ativas (X/3), **uptime do túnel**, **quantas vezes caiu** (NRestarts);
 - **gráfico de banda agregada** (últimos ~6 min — pra ver pico/saturação);
 - por antena: status, banda ↓/↑, **latência (ms) e perda (%)** com ⚠️ quando degrada (perda ≥5% ou ping ≥150ms);
@@ -137,12 +137,15 @@ Acesse **http://192.168.100.1** pela rede da CCR — painel que atualiza a cada 
 É `router/dashboard.py` (Python puro, sem deps) + `dashboard.service`. Configure no service:
 `GLORY_IFACES` (nomes das Starlink) e `GLORY_VPS_IP` (IP público da VPS, pra medir latência/perda por antena).
 
-**Obstrução do prato (opcional, avançado):** setar `GLORY_DISHES` no service. Requer:
-1. o binário **`grpcurl`** instalado;
-2. resolver o **conflito de IP**: o prato Starlink usa `192.168.100.1` de gerência — o MESMO IP da nossa
-   LAN. Pra consultar os pratos, use uma LAN em outra faixa (ex: `192.168.50.0/24`) e roteie
-   `192.168.100.1` por cada dish (source routing). Sem isso, mostra `N/A` (não afeta o resto).
-   → Validar no i5 com os pratos reais; não é necessário pro bonding funcionar.
+**Obstrução do prato (opcional, avançado):** o prato Starlink expõe status de gerência em
+`192.168.100.1:9200`. Como movemos a LAN para `192.168.50.x`, o `192.168.100.1` ficou **livre** —
+não há mais conflito. Para habilitar:
+1. instalar o binário **`grpcurl`**;
+2. rotear `192.168.100.1` por cada dish. As 3 antenas usam o MESMO IP de gerência (`192.168.100.1`)
+   em interfaces diferentes — mesmo problema do gateway `100.64.0.1`. Solução: adicionar
+   `ip route add 192.168.100.1 dev ethN table 10N` em cada tabela Starlink (no `30-routing.sh`) e
+   consultar um dish por vez, ou por interface. **Validar no i5 com os pratos reais.**
+3. setar `GLORY_DISHES` no `dashboard.service`. Sem isso, o painel mostra `N/A` (não afeta o resto).
 
 ### Monitor por antena (terminal)
 `bash router/monitor-antenas.sh` mostra, a cada 1s: status do path de cada Starlink (✅/❌),

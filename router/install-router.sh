@@ -50,7 +50,7 @@ sudo cp 80-glorytun-watchdog.timer /etc/systemd/system/glorytun-watchdog.timer
 sudo systemctl daemon-reload
 sudo systemctl enable --now glorytun-watchdog.timer
 
-echo ">> [9/9] painel web de status (http://192.168.100.1)"
+echo ">> [9/9] painel web de status (http://192.168.50.1)"
 sudo cp dashboard.service /etc/systemd/system/dashboard.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now dashboard
@@ -62,5 +62,5 @@ echo "CIFRA desta ponta (tem que ser IGUAL à da VPS — senão conecta mas não
 glorytun show 2>/dev/null | grep -i cipher || true
 echo -n "IP público visto pela internet (deve ser o da VPS): "; curl -s --max-time 8 ifconfig.me || true; echo
 echo
-echo "PAINEL: abra http://192.168.100.1 no navegador (pela rede da CCR) pra ver o status."
+echo "PAINEL: abra http://192.168.50.1 no navegador (pela rede da CCR) pra ver o status."
 echo "DICA: rode 'sudo bash /opt/mptcp/router/test-resilience.sh' pra provar que o túnel volta sozinho."

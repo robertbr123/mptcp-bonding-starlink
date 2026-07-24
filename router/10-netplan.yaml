@@ -23,7 +23,7 @@ network:
         use-dns: false
     enp4s0:            # LAN para a CCR MikroTik
       dhcp4: false
-      addresses: [192.168.100.1/24]
+      addresses: [192.168.50.1/24]
       # DNS público fixo para o PRÓPRIO router (apt, etc.) — 1.1.1.1 é alcançável
       # tanto direto quanto pelo túnel, então o router sempre resolve nomes.
       # (os CLIENTES usam o DNS da CCR; isto é só pro router.)

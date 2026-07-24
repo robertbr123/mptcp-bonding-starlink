@@ -25,7 +25,7 @@ O usuário tentou OpenMPTCProuter (OMR) mas o serviço parava de funcionar ao pa
                                                        └──── túnel MPTCP (glorytun) ────► VPS ────► Internet
 ```
 
-**Fluxo do pacote (ida):** cliente → CCR (PPPoE + NAT) → `192.168.100.1` (router) → `tun0` → MPTCP pelas 3 Starlink → `tun0` na VPS → NAT na VPS → Internet. Volta é o caminho inverso.
+**Fluxo do pacote (ida):** cliente → CCR (PPPoE + NAT) → `192.168.50.1` (router) → `tun0` → MPTCP pelas 3 Starlink → `tun0` na VPS → NAT na VPS → Internet. Volta é o caminho inverso.
 
 ---
 
@@ -49,7 +49,7 @@ ROUTER LINUX — 4 portas:
   eth1  →  Starlink 1   (DHCP: 100.64.0.x, gw 100.64.0.1)  → tabela de rota 101
   eth2  →  Starlink 2   (DHCP: 100.64.0.y, gw 100.64.0.1)  → tabela de rota 102
   eth3  →  Starlink 3   (DHCP: 100.64.0.z, gw 100.64.0.1)  → tabela de rota 103
-  eth4  →  CCR (LAN)     IP fixo 192.168.100.1/24
+  eth4  →  CCR (LAN)     IP fixo 192.168.50.1/24
 
 TÚNEL (glorytun):
   tun0 no router  = 10.255.255.2/30
@@ -59,7 +59,7 @@ VPS:
   eth0 = IP público
 ```
 
-Na CCR: trocar o gateway/upstream de saída para `192.168.100.1` (o IP de LAN do router Linux).
+Na CCR: trocar o gateway/upstream de saída para `192.168.50.1` (o IP de LAN do router Linux).
 
 ---
 

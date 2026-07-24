@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # router/dashboard.py — painel web de status do bonding Starlink (LAN).
-# Acesse em http://192.168.100.1 (rede da CCR). Só Python3 stdlib, sem dependências.
+# Acesse em http://192.168.50.1 (rede da CCR). Só Python3 stdlib, sem dependências.
 #
 # Config por env (padrões = produção i5):
-#   GLORY_LAN_IP  IP de bind (0.0.0.0 = todos)          [192.168.100.1]
+#   GLORY_LAN_IP  IP de bind (0.0.0.0 = todos)          [192.168.50.1]
 #   GLORY_PORT    porta                                  [80]
 #   GLORY_IFACES  interfaces Starlink, separadas por ,   [enp1s0,enp2s0,enp3s0]
 #   GLORY_PEER    IP do outro lado do túnel              [10.255.255.1]
@@ -12,7 +12,7 @@
 import subprocess, time, html, os, threading, collections
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-LAN_IP = os.environ.get("GLORY_LAN_IP", "192.168.100.1")
+LAN_IP = os.environ.get("GLORY_LAN_IP", "192.168.50.1")
 PORT   = int(os.environ.get("GLORY_PORT", "80"))
 IFACES = [x for x in os.environ.get("GLORY_IFACES", "enp1s0,enp2s0,enp3s0").split(",") if x]
 PEER   = os.environ.get("GLORY_PEER", "10.255.255.1")
@@ -74,8 +74,8 @@ def drop_events():
     return list(reversed(ev))
 
 def dish_stats():
-    # OBSTRUÇÃO DO PRATO — best-effort. Precisa do binário 'grpcurl' e do endpoint de cada prato.
-    # Ver observações no README (conflito de IP 192.168.100.1 e como reservar acesso ao prato).
+    # OBSTRUÇÃO DO PRATO — best-effort. Precisa do binário 'grpcurl'. Os pratos ficam em
+    # 192.168.100.1:9200 (livre, pois a LAN é 192.168.50.x). Reachability por dish: ver OPERACAO.md.
     res = {}
     if not DISHES or not ok("command -v grpcurl"): return res
     for d in DISHES:

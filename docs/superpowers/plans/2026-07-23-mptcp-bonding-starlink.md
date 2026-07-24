@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - **SO:** Ubuntu Server 24.04 LTS nas duas pontas (kernel >= 6.8).
-- **Interfaces do router:** `eth1/eth2/eth3` = Starlink (DHCP), `eth4` = CCR (fixo `192.168.100.1/24`). Nomes reais podem variar (`enp1s0`...) — mapear no início.
+- **Interfaces do router:** `eth1/eth2/eth3` = Starlink (DHCP), `eth4` = CCR (fixo `192.168.50.1/24`). Nomes reais podem variar (`enp1s0`...) — mapear no início.
 - **Tabelas de roteamento:** 101/102/103 = Starlink 1/2/3.
 - **Túnel:** `tun0` = `10.255.255.2/30` (router) / `10.255.255.1/30` (VPS). Porta glorytun `65001`.
 - **Segredos:** a chave do glorytun (`/etc/glorytun/tunnel.key`) NUNCA entra no git (`.gitignore` já cobre `*.key`).
@@ -88,7 +88,7 @@ git commit -m "feat(router): script de descoberta de interfaces"
 
 **Interfaces:**
 - Consumes: mapeamento de nomes da Task 0.
-- Produces: 3 interfaces Starlink com DHCP (SEM rota default global) + LAN fixa `192.168.100.1/24`.
+- Produces: 3 interfaces Starlink com DHCP (SEM rota default global) + LAN fixa `192.168.50.1/24`.
 
 - [ ] **Step 1: Criar o netplan**
 
@@ -110,7 +110,7 @@ network:
       dhcp4-overrides: { use-routes: false, use-dns: false }
     enp4s0:            # LAN para a CCR
       dhcp4: false
-      addresses: [192.168.100.1/24]
+      addresses: [192.168.50.1/24]
 ```
 
 > `use-routes: false` é essencial: impede que as 3 Starlink briguem pela rota default global. A rota de cada uma vai só na sua tabela (Task 3).
@@ -124,7 +124,7 @@ sudo chmod 600 /etc/netplan/10-mptcp.yaml
 sudo netplan apply
 ip -4 -br addr show
 ```
-Expected: as 3 Starlink com IP `100.64.x.x`, a LAN com `192.168.100.1`. `ip route show` (tabela main) NÃO deve ter default pelas Starlink.
+Expected: as 3 Starlink com IP `100.64.x.x`, a LAN com `192.168.50.1`. `ip route show` (tabela main) NÃO deve ter default pelas Starlink.
 
 - [ ] **Step 3: Commit**
 
@@ -771,7 +771,7 @@ git commit -m "feat: orquestradores de instalação router+vps e testes de bondi
 
 - [ ] **Step 1: Escrever o runbook**
 
-Conteúdo: (1) na CCR MikroTik, trocar a rota default / gateway de saída para `192.168.100.1` e garantir que o NAT dos clientes continua ativo; (2) checklist de troubleshooting (túnel não sobe → checar chave/porta/firewall da VPS; só 1 subflow ativo → checar `ip rule`/rp_filter; vídeo trava → checar MTU/MSS); (3) comandos de status do dia a dia.
+Conteúdo: (1) na CCR MikroTik, trocar a rota default / gateway de saída para `192.168.50.1` e garantir que o NAT dos clientes continua ativo; (2) checklist de troubleshooting (túnel não sobe → checar chave/porta/firewall da VPS; só 1 subflow ativo → checar `ip rule`/rp_filter; vídeo trava → checar MTU/MSS); (3) comandos de status do dia a dia.
 
 - [ ] **Step 2: Commit**
 
