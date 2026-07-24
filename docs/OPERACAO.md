@@ -60,6 +60,24 @@ sudo bash vps/install-vps.sh
    sudo bash router/install-router.sh
    ```
 
+## Opção: Starlinks via switch gerenciável + VLANs
+
+Em vez de 3 portas físicas no i5, dá pra ligar as 3 Starlink num switch gerenciável e trazer tudo
+por 1 porta trunk. **O resto do projeto não muda** (tudo é por nome de interface).
+
+**No switch:** cada Starlink numa porta ACCESS (VLAN 10, 20, 30); 1 porta TRUNK com as 3 VLANs
+marcadas (tagged) indo pro i5. A CCR numa porta física **separada** do i5 (não no trunk — senão o
+tráfego cifrado das Starlink + o decifrado dos clientes competem no mesmo cabo).
+
+**No i5:**
+1. Use `router/10-netplan-vlan.yaml` no lugar de `10-netplan.yaml` (cria `vlan10/20/30`).
+2. Troque os nomes das interfaces de `enp1s0/2/3` para **`vlan10/vlan20/vlan30`** em:
+   `30-routing.sh`, `45-glorytun-paths.sh`, `50-dhcp-hook.sh`, `70-tunnel-routing.sh` e
+   `GLORY_IFACES` no `dashboard.service`. Mapa: vlan10→tabela 101, vlan20→102, vlan30→103.
+
+**Banda:** as 3 Starlink (~450–600 Mbit) passam pelo trunk — gigabit sobra. Só precisaria de
+2.5G/10G ou LAG se um dia o agregado passar de ~900 Mbit.
+
 ## Passo na CCR MikroTik (o que muda lá)
 
 A CCR continua fazendo **PPPoE + autenticação + NAT dos clientes** — só muda para onde ela manda o tráfego de saída:

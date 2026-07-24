@@ -1,0 +1,38 @@
+# router/10-netplan-vlan.yaml — ALTERNATIVA: Starlinks via switch gerenciável + VLANs.
+# Use ESTE no lugar de 10-netplan.yaml se for ligar as 3 Starlink num switch (trunk),
+# em vez de 3 portas físicas no i5. Copie para /etc/netplan/10-mptcp.yaml.
+#
+# NO SWITCH:
+#   - porta de cada Starlink = ACCESS VLAN 10 / 20 / 30 (uma antena por VLAN)
+#   - 1 porta = TRUNK com as VLANs 10,20,30 marcadas (tagged) -> vai pro i5 (enp1s0 abaixo)
+#   - a CCR fica numa porta física separada do i5 (enp2s0), NÃO no trunk (ver OPERACAO.md)
+#
+# DEPOIS: em 30-routing.sh, 40/45-*.sh, 50-dhcp-hook.sh, 70-tunnel-routing.sh, dashboard.service
+#         troque os nomes das interfaces para: vlan10, vlan20, vlan30
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp1s0:            # porta TRUNK para o switch (carrega as VLANs 10/20/30)
+      dhcp4: false
+    enp2s0:            # LAN para a CCR (porta física separada — isola a banda dos clientes)
+      dhcp4: false
+      addresses: [192.168.50.1/24]
+      nameservers:
+        addresses: [1.1.1.1, 8.8.8.8]
+  vlans:
+    vlan10:            # Starlink 1
+      id: 10
+      link: enp1s0
+      dhcp4: true
+      dhcp4-overrides: {use-routes: false, use-dns: false}
+    vlan20:            # Starlink 2
+      id: 20
+      link: enp1s0
+      dhcp4: true
+      dhcp4-overrides: {use-routes: false, use-dns: false}
+    vlan30:            # Starlink 3
+      id: 30
+      link: enp1s0
+      dhcp4: true
+      dhcp4-overrides: {use-routes: false, use-dns: false}
