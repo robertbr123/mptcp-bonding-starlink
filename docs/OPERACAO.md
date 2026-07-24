@@ -119,7 +119,14 @@ Três camadas garantem que o túnel volta sozinho se cair:
 
 1. **`Restart=always` + `RestartSec=3`** nos serviços — se o processo glorytun morrer, o systemd sobe de novo em 3s.
 2. **`StartLimitIntervalSec=0`** — o systemd **nunca desiste** de reiniciar (sem o limite padrão de 5 tentativas).
-3. **Watchdog (`glorytun-watchdog.timer`)** — a cada 30s pinga o outro lado do túnel (`10.255.255.1`) pela `tun0`; se não responder, reinicia o `glorytun-client`. Pega o caso do túnel "travar vivo".
+3. **Watchdog em 2 níveis (`glorytun-watchdog.timer`, a cada 30s):**
+   - **Nível 1 — túnel inteiro:** se o peer (`10.255.255.1`) não responde pela `tun0`, reinicia o `glorytun-client`.
+   - **Nível 2 — por antena:** se o path de UMA Starlink caiu/sumiu (mas o túnel está vivo pelas outras), reabilita só aquele path — o bonding volta pra 3/3 sozinho.
+
+### Monitor por antena
+`bash router/monitor-antenas.sh` mostra, a cada 1s: status do path de cada Starlink (✅/❌),
+throughput ↓/↑ por antena, o agregado no `tun0`, e avisa se alguma antena não está ativa.
+Use pra flagrar rápido uma Starlink rendendo menos ou caída.
 
 Testar a resiliência:
 ```bash
