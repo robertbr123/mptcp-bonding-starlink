@@ -13,9 +13,14 @@ sudo cp 10-netplan.yaml /etc/netplan/10-mptcp.yaml
 sudo chmod 600 /etc/netplan/10-mptcp.yaml
 sudo netplan apply
 
-echo ">> [2/8] sysctl (MPTCP + multi-NIC)"
+echo ">> [2/8] sysctl (MPTCP + multi-NIC) + DNS público"
 sudo cp 20-sysctl-mptcp.conf /etc/sysctl.d/90-mptcp.conf
 sudo sysctl --system >/dev/null
+# DNS fixo no systemd-resolved: NÃO depender do DNS da Starlink (que pode ficar
+# inalcançável pelo túnel e derrubar a resolução de nomes — foi o que vimos no teste).
+sudo sed -i 's/^#\?DNS=.*/DNS=1.1.1.1 8.8.8.8/' /etc/systemd/resolved.conf 2>/dev/null || true
+sudo sed -i 's/^#\?FallbackDNS=.*/FallbackDNS=1.0.0.1 8.8.4.4/' /etc/systemd/resolved.conf 2>/dev/null || true
+sudo systemctl restart systemd-resolved 2>/dev/null || true
 
 echo ">> [3/8] roteamento por interface"
 sudo bash 30-routing.sh
