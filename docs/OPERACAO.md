@@ -127,7 +127,13 @@ morreu no teste só porque estava manual; via `install-vps.sh` ele é systemd e 
    - **Nível 1 — túnel inteiro:** se o peer (`10.255.255.1`) não responde pela `tun0`, reinicia o `glorytun-client`.
    - **Nível 2 — por antena:** se o path de UMA Starlink caiu/sumiu (mas o túnel está vivo pelas outras), reabilita só aquele path — o bonding volta pra 3/3 sozinho.
 
-### Monitor por antena
+### Painel web (navegador)
+Acesse **http://192.168.100.1** pela rede da CCR — painel de status que atualiza a cada 5s:
+túnel online/offline, serviço glorytun, watchdog, antenas ativas (X/3), **quantas vezes caiu**
+(NRestarts do systemd), banda agregada e banda por antena. É `router/dashboard.py` (Python puro,
+sem dependências), rodando como serviço `dashboard.service`. Instalado pelo `install-router.sh` (passo 9).
+
+### Monitor por antena (terminal)
 `bash router/monitor-antenas.sh` mostra, a cada 1s: status do path de cada Starlink (✅/❌),
 throughput ↓/↑ por antena, o agregado no `tun0`, e avisa se alguma antena não está ativa.
 Use pra flagrar rápido uma Starlink rendendo menos ou caída.
