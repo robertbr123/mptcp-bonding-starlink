@@ -23,6 +23,17 @@
 > glorytun path addr <IP_LOCAL> set rate fixed tx 30mbit rx 200mbit
 > ```
 > Sem a linha do `rate`, a banda fica `0bit` e nada trafega (o túnel fica "running" mas sem dados).
+>
+> **MTU:** a Starlink em bypass não gosta de pacote grande. Em testes, MTU 1400 rendeu bem menos
+> que 1300 (ex: 52 → 76 Mbit numa antena). Usar **`tun0` MTU 1300** nas duas pontas. Ajuste fino
+> abaixo disso tem retorno baixo (a variação natural da Starlink é maior que o efeito do MTU).
+>
+> **Rate = capacidade REAL:** o `rate` do path é um marca-passo — deve bater com a banda real do link
+> (ex: Starlink ~tx 30mbit / rx 150mbit). Setar alto demais (ex: 1000mbit num link de 40) faz o
+> glorytun afogar o link e causar perda/retransmissão. `set rate auto` piorou nos testes; usar `fixed`.
+>
+> **Eficiência esperada:** 1 Starlink por túnel rende ~40-45% do nativo (perda/overhead são inerentes
+> a passar Starlink por túnel UDP). O ganho real vem de somar as 3 antenas + muitos fluxos de clientes.
 
 
 
