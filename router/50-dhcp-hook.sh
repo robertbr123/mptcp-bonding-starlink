@@ -27,6 +27,8 @@ ip rule add from "$ip4" table "$tbl" priority "$tbl"
 ip rule flush cache 2>/dev/null || true
 
 # reabilita o path do glorytun para o novo IP dessa Starlink (bonding)
-glorytun path up "$ip4" rate tx 20mbit rx 150mbit 2>/dev/null || true
+# sintaxe validada: 'set up' + 'set rate fixed tx X rx Y'
+glorytun path addr "$ip4" set up 2>/dev/null || true
+glorytun path addr "$ip4" set rate fixed tx 30mbit rx 200mbit 2>/dev/null || true
 
 logger -t mptcp-hook "reconfig $IFACE ip=$ip4 tabela=$tbl (path glorytun reabilitado)"

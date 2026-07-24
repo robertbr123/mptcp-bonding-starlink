@@ -10,6 +10,19 @@
 >
 > **FIREWALL:** a porta **UDP 65001** precisa estar liberada de entrada na VPS (no firewall do
 > provedor / security group **e** no ufw/iptables local, se houver).
+>
+> **CIFRA (pegadinha importante):** o glorytun escolhe a cifra pelo hardware — `aegis256` se a CPU
+> tem AES-NI, senão `chacha20`. **As duas pontas TÊM que usar a mesma cifra**, senão o túnel conecta
+> (handshake OK, ping falha) mas os DADOS não passam. O i5 e a VPS de produção têm AES → usam
+> `aegis256` e batem. Mas **máquina sem AES** (algumas VPS baratas) cai no `chacha20` e dá mismatch.
+> Solução nesses casos: adicionar a palavra **`chacha`** no comando `bind` das **DUAS** pontas.
+>
+> **Sequência que faz o path (bonding) funcionar** — validada em campo:
+> ```
+> glorytun path addr <IP_LOCAL> set up
+> glorytun path addr <IP_LOCAL> set rate fixed tx 30mbit rx 200mbit
+> ```
+> Sem a linha do `rate`, a banda fica `0bit` e nada trafega (o túnel fica "running" mas sem dados).
 
 
 
