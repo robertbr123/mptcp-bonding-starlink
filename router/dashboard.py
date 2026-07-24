@@ -151,7 +151,9 @@ def page():
     client_up = out("systemctl is-active glorytun-client") == "active"
     wd_up     = out("systemctl is-active glorytun-watchdog.timer") == "active"
     restarts  = out("systemctl show glorytun-client --property=NRestarts --value") or "0"
-    tun_up    = ok(f"ping -c1 -W1 -I tun0 {PEER}")
+    # túnel "online" = serviço ativo E pelo menos 1 antena com path 'running'.
+    # (não usa ping — com 1 Starlink a perda faz o ping falhar e piscar OFFLINE à toa.)
+    tun_up    = client_up and any(d.get("status") == "running" for d in ifs.values())
 
     rows, ativas = [], 0
     for i in IFACES:

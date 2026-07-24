@@ -11,10 +11,21 @@ IFACES=(enp1s0 enp2s0 enp3s0)
 RATE_TX="30mbit"
 RATE_RX="200mbit"
 
-# (1) túnel inteiro morto? (peer não responde de jeito nenhum)
-if ! ping -c3 -W2 -I tun0 "$PEER" >/dev/null 2>&1; then
-  logger -t glorytun-watchdog "TUNEL MORTO (peer $PEER sem resposta) — reiniciando glorytun-client"
-  systemctl restart glorytun-client
+# (1) túnel inteiro morto? TOLERANTE À PERDA: 5 pings (basta 1 responder), e só reinicia
+# se DUAS checagens seguidas falharem (evita reinício à toa quando a Starlink oscila/1 antena).
+WD_STATE=/run/glorytun-wd-fail
+if ping -c5 -W2 -I tun0 "$PEER" >/dev/null 2>&1; then
+  rm -f "$WD_STATE"        # respondeu → zera o contador
+else
+  fails=$(( $(cat "$WD_STATE" 2>/dev/null || echo 0) + 1 ))
+  echo "$fails" > "$WD_STATE"
+  if [ "$fails" -ge 2 ]; then
+    rm -f "$WD_STATE"
+    logger -t glorytun-watchdog "TUNEL MORTO (2 checagens seguidas sem resposta) — reiniciando glorytun-client"
+    systemctl restart glorytun-client
+  else
+    logger -t glorytun-watchdog "ping falhou ($fails/2) — aguardando confirmar antes de reiniciar"
+  fi
   exit 0
 fi
 

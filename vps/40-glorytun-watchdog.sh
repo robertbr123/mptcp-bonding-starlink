@@ -6,9 +6,19 @@ set -euo pipefail
 
 PEER="10.255.255.2"   # tun0 do router (cliente)
 
-if ping -c3 -W2 -I tun0 "$PEER" >/dev/null 2>&1; then
-  exit 0   # túnel vivo
+# TOLERANTE À PERDA: 5 pings (basta 1 responder), e só reinicia se DUAS checagens seguidas
+# falharem (evita reinício à toa quando a Starlink oscila / o router está com 1 antena).
+WD_STATE=/run/glorytun-wd-fail
+if ping -c5 -W2 -I tun0 "$PEER" >/dev/null 2>&1; then
+  rm -f "$WD_STATE"; exit 0   # túnel vivo
 fi
 
-logger -t glorytun-watchdog "peer $PEER sem resposta pela tun0 — reiniciando glorytun-server"
-systemctl restart glorytun-server
+fails=$(( $(cat "$WD_STATE" 2>/dev/null || echo 0) + 1 ))
+echo "$fails" > "$WD_STATE"
+if [ "$fails" -ge 2 ]; then
+  rm -f "$WD_STATE"
+  logger -t glorytun-watchdog "peer $PEER morto (2 checagens seguidas) — reiniciando glorytun-server"
+  systemctl restart glorytun-server
+else
+  logger -t glorytun-watchdog "ping falhou ($fails/2) — aguardando confirmar"
+fi
